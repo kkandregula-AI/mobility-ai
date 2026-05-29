@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#050A14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MobilityAI">
+<link rel="manifest" id="manifest-link">
+<title>MobilityAI — Traffic Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Exo+2:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-void: #050A14;
+  --bg-deep: #080F1E;
+  --bg-card: #0C1628;
+  --bg-glass: rgba(12,22,40,0.85);
+  --cyan: #00E5FF;
+  --cyan-dim: #0096AA;
+  --cyan-glow: rgba(0,229,255,0.15);
+  --amber: #FF8C00;
+  --amber-glow: rgba(255,140,0,0.15);
+  --green: #00FF87;
+  --green-dim: #00B85A;
+  --red: #FF3D5A;
+  --purple: #9D4EDD;
+  --text-prime: #E8F4FD;
+  --text-sub: #7A9BB5;
+  --text-muted: #3D5A73;
+  --border: rgba(0,229,255,0.12);
+  --border-bright: rgba(0,229,255,0.35);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg-void);
+  color: var(--text-prime);
+  font-family: 'Exo 2', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID BACKGROUND ── */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events:none;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::after {
+  content:'';
+  position:fixed; inset:0; z-index:0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px
+  );
+  pointer-events:none;
+}
+
+.app { position:relative; z-index:1; max-width:480px; margin:0 auto; padding-bottom:80px; }
+
+/* ── HEADER ── */
+.header {
+  padding: 16px 20px 12px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  position: sticky; top:0; z-index:100;
+  background: rgba(5,10,20,0.92);
+}
+
+.logo {
+  display:flex; align-items:center; gap:10px;
+}
+
+.logo-icon {
+  width:36px; height:36px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  box-shadow: 0 0 20px rgba(0,229,255,0.4);
+}
+
+.logo-text {
+  font-family: 'Orbitron', monospace;
+  font-size:14px; font-weight:700;
+  letter-spacing:2px;
+  color: var(--cyan);
+}
+
+.logo-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size:9px; color: var(--text-muted);
+  letter-spacing:1px;
+}
+
+.header-right {
+  text-align:right;
+}
+
+.live-dot {
+  display:inline-block;
+  width:6px; height:6px;
+  background: var(--green);
+  border-radius:50%;
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 1.5s infinite;
+  margin-right:5px;
+}
+
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+.live-label {
+  font-family:'Share Tech Mono'; font-size:9px;
+  color:var(--green); letter-spacing:1px;
+}
+
+.clock {
+  font-family:'Share Tech Mono'; font-size:13px;
+  color:var(--text-sub); margin-top:2px;
+}
+
+/* ── API KEY SECTION ── */
+.api-section {
+  margin:16px 20px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius:12px;
+  padding:14px 16px;
+}
+
+.api-label {
+  font-family:'Share Tech Mono'; font-size:10px;
+  color:var(--text-muted); letter-spacing:1.5px;
+  margin-bottom:8px; display:flex; align-items:center; gap:6px;
+}
+
+.api-row {
+  display:flex; gap:8px;
+}
+
+.api-input {
+  flex:1; background:rgba(0,229,255,0.04);
+  border:1px solid var(--border);
+  border-radius:8px; padding:8px 12px;
+  color:var(--text-prime); font-family:'Share Tech Mono'; font-size:12px;
+  outline:none;
+  transition: border-color .2s;
+}
+
+.api-input:focus { border-color: var(--cyan-dim); }
+
+.btn-save {
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  border:none; border-radius:8px; padding:8px 16px;
+  color:#050A14; font-family:'Orbitron'; font-size:10px;
+  font-weight:700; cursor:pointer; letter-spacing:1px;
+  transition: box-shadow .2s;
+}
+.btn-save:hover { box-shadow:0 0 20px rgba(0,229,255,0.5); }
+
+/* ── SECTION HEADER ── */
+.section-header {
+  padding: 20px 20px 10px;
+  display:flex; align-items:center; gap:10px;
+}
+
+.section-tag {
+  font-family:'Orbitron'; font-size:9px; font-weight:700;
+  letter-spacing:2px; color:var(--cyan);
+  background: var(--cyan-glow);
+  border:1px solid rgba(0,229,255,0.2);
+  padding:3px 8px; border-radius:4px;
+}
+
+.section-line {
+  flex:1; height:1px;
+  background: linear-gradient(90deg, var(--border-bright), transparent);
+}
+
+/* ── CITY STRIP ── */
+.city-strip {
+  margin:0 20px;
+  display:flex; gap:8px; overflow-x:auto;
+  scrollbar-width:none; padding-bottom:4px;
+}
+.city-strip::-webkit-scrollbar { display:none; }
+
+.city-btn {
+  flex-shrink:0;
+  background:var(--bg-card); border:1px solid var(--border);
+  border-radius:20px; padding:6px 14px;
+  font-family:'Exo 2'; font-size:11px; font-weight:600;
+  color:var(--text-sub); cursor:pointer;
+  transition: all .2s;
+  white-space:nowrap;
+}
+
+.city-btn.active, .city-btn:hover {
+  background:var(--cyan-glow);
+  border-color:var(--cyan-dim);
+  color:var(--cyan);
+}
+
+/* ── ROUTE CARD ── */
+.route-card {
+  margin:16px 20px 0;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:16px; overflow:hidden;
+}
+
+.route-card-header {
+  padding:14px 16px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.06), rgba(157,78,221,0.06));
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+
+.route-card-title {
+  font-family:'Orbitron'; font-size:10px; font-weight:700;
+  letter-spacing:2px; color:var(--cyan);
+}
+
+.mode-tags { display:flex; gap:6px; }
+
+.mode-tag {
+  font-size:16px; cursor:pointer;
+  padding:2px 6px; border-radius:6px;
+  border:1px solid transparent;
+  transition:all .2s;
+  user-select:none;
+}
+
+.mode-tag.active {
+  background:var(--cyan-glow);
+  border-color:var(--cyan-dim);
+}
+
+.route-inputs { padding:16px; }
+
+.input-group {
+  position:relative; margin-bottom:12px;
+}
+
+.input-group:last-child { margin-bottom:0; }
+
+.input-icon {
+  position:absolute; left:12px; top:50%; transform:translateY(-50%);
+  font-size:16px;
+}
+
+.route-input {
+  width:100%;
+  background:rgba(0,229,255,0.04);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:11px 12px 11px 40px;
+  color:var(--text-prime);
+  font-family:'Exo 2'; font-size:13px; font-weight:500;
+  outline:none; transition:border-color .2s;
+}
+
+.route-input:focus { border-color:var(--cyan-dim); background:rgba(0,229,255,0.06); }
+.route-input::placeholder { color:var(--text-muted); }
+
+.connector {
+  display:flex; align-items:center; gap:8px;
+  margin:6px 0 6px 14px;
+}
+
+.connector-line {
+  width:2px; height:20px;
+  background:linear-gradient(var(--cyan-dim), var(--purple));
+  border-radius:1px;
+}
+
+.connector-dots {
+  font-size:10px; color:var(--text-muted);
+}
+
+/* PREFERENCES ROW */
+.prefs-row {
+  margin: 12px 0 0;
+  display:flex; gap:6px; flex-wrap:wrap;
+}
+
+.pref-chip {
+  background:rgba(255,140,0,0.08);
+  border:1px solid rgba(255,140,0,0.2);
+  border-radius:16px; padding:5px 12px;
+  font-size:11px; font-weight:600; color:var(--amber);
+  cursor:pointer; transition:all .2s; user-select:none;
+}
+.pref-chip.active, .pref-chip:hover {
+  background:var(--amber-glow);
+  border-color:var(--amber);
+}
+
+/* ── ANALYZE BUTTON ── */
+.btn-analyze {
+  margin:16px 20px 0;
+  width:calc(100% - 40px);
+  background: linear-gradient(135deg, #00E5FF 0%, #9D4EDD 50%, #FF8C00 100%);
+  border:none; border-radius:14px;
+  padding:16px;
+  color:#050A14; font-family:'Orbitron'; font-size:12px;
+  font-weight:900; letter-spacing:3px;
+  cursor:pointer;
+  position:relative; overflow:hidden;
+  transition: transform .15s, box-shadow .3s;
+  box-shadow: 0 8px 32px rgba(0,229,255,0.3);
+}
+
+.btn-analyze::before {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+  opacity:0; transition:opacity .2s;
+}
+
+.btn-analyze:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(0,229,255,0.5); }
+.btn-analyze:hover::before { opacity:1; }
+.btn-analyze:active { transform:translateY(0); }
+.btn-analyze:disabled { opacity:.6; cursor:default; transform:none; }
+
+/* ── LOADING STATE ── */
+.loading-card {
+  margin:16px 20px 0;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:16px; padding:24px;
+  display:none;
+}
+
+.loading-card.visible { display:block; }
+
+.loading-stages { display:flex; flex-direction:column; gap:10px; }
+
+.stage-row {
+  display:flex; align-items:center; gap:12px;
+  padding:8px 12px;
+  border-radius:8px;
+  background:rgba(0,229,255,0.03);
+  border:1px solid transparent;
+  transition:all .3s;
+}
+
+.stage-row.active {
+  background:rgba(0,229,255,0.08);
+  border-color:rgba(0,229,255,0.2);
+}
+
+.stage-row.done {
+  background:rgba(0,255,135,0.06);
+  border-color:rgba(0,255,135,0.15);
+}
+
+.stage-icon { font-size:16px; width:24px; text-align:center; }
+
+.stage-text {
+  flex:1; font-family:'Share Tech Mono'; font-size:11px;
+  color:var(--text-sub); letter-spacing:.5px;
+}
+
+.stage-row.active .stage-text { color:var(--cyan); }
+.stage-row.done .stage-text { color:var(--green-dim); }
+
+.stage-status {
+  font-family:'Share Tech Mono'; font-size:10px;
+}
+
+.stage-row.active .stage-status { color:var(--cyan); animation:blink .8s infinite; }
+.stage-row.done .stage-status { color:var(--green); }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── IMPACT BANNER ── */
+.impact-banner {
+  margin:16px 20px 0;
+  background: linear-gradient(135deg, #0C2810, #0A1F30);
+  border:2px solid rgba(0,255,135,0.3);
+  border-radius:16px; padding:20px;
+  display:none;
+  position:relative; overflow:hidden;
+}
+
+.impact-banner.visible { display:block; }
+
+.impact-banner::before {
+  content:'';
+  position:absolute; top:-30px; right:-30px;
+  width:120px; height:120px;
+  background: radial-gradient(circle, rgba(0,255,135,0.15), transparent 70%);
+  border-radius:50%;
+}
+
+.impact-label {
+  font-family:'Share Tech Mono'; font-size:9px;
+  color:var(--green-dim); letter-spacing:2px; margin-bottom:10px;
+}
+
+.impact-main {
+  font-family:'Orbitron'; font-size:22px; font-weight:900;
+  color:var(--green);
+  text-shadow:0 0 20px rgba(0,255,135,0.5);
+  line-height:1.3;
+}
+
+.impact-sub {
+  font-family:'Exo 2'; font-size:12px; font-weight:500;
+  color:var(--text-sub); margin-top:6px;
+}
+
+.impact-chips {
+  display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;
+}
+
+.impact-chip {
+  background:rgba(0,255,135,0.1); border:1px solid rgba(0,255,135,0.2);
+  border-radius:20px; padding:4px 12px;
+  font-family:'Exo 2'; font-size:11px; font-weight:600;
+  color:var(--green-dim);
+}
+
+/* ── RESULTS GRID ── */
+.results-section {
+  margin:16px 20px 0;
+  display:none;
+}
+
+.results-section.visible { display:block; }
+
+/* Route Options */
+.route-options { display:flex; flex-direction:column; gap:10px; }
+
+.route-option {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:14px; padding:14px 16px;
+  cursor:pointer; transition:all .25s;
+  position:relative; overflow:hidden;
+}
+
+.route-option::before {
+  content:'';
+  position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--text-muted);
+  transition:background .2s;
+}
+
+.route-option.best::before { background: linear-gradient(var(--green), var(--cyan)); }
+.route-option.fast::before { background: linear-gradient(var(--cyan), var(--purple)); }
+.route-option.cheap::before { background: linear-gradient(var(--amber), var(--red)); }
+
+.route-option:hover {
+  border-color:var(--cyan-dim);
+  background:rgba(12,22,40,0.95);
+  transform:translateY(-1px);
+}
+
+.route-option-top {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.route-badge {
+  font-family:'Orbitron'; font-size:8px; font-weight:700;
+  letter-spacing:1.5px; padding:3px 8px; border-radius:4px;
+}
+
+.badge-best {
+  background:rgba(0,255,135,0.15); color:var(--green);
+  border:1px solid rgba(0,255,135,0.3);
+}
+.badge-fast {
+  background:var(--cyan-glow); color:var(--cyan);
+  border:1px solid rgba(0,229,255,0.3);
+}
+.badge-cheap {
+  background:var(--amber-glow); color:var(--amber);
+  border:1px solid rgba(255,140,0,0.3);
+}
+
+.route-metrics {
+  display:flex; gap:16px; align-items:center;
+}
+
+.metric {
+  text-align:right;
+}
+.metric-val {
+  font-family:'Orbitron'; font-size:16px; font-weight:700;
+  color:var(--text-prime);
+}
+.metric-label {
+  font-size:9px; color:var(--text-muted);
+  letter-spacing:1px; font-family:'Share Tech Mono';
+}
+
+.route-legs {
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+}
+
+.leg {
+  display:flex; align-items:center; gap:4px;
+  background:rgba(0,229,255,0.05);
+  border:1px solid var(--border);
+  border-radius:6px; padding:4px 8px;
+  font-size:11px; color:var(--text-sub);
+}
+
+.leg-icon { font-size:13px; }
+.leg-arrow { color:var(--text-muted); font-size:10px; }
+
+.congestion-bar {
+  margin-top:10px;
+  height:3px; border-radius:2px;
+  background:rgba(255,255,255,0.05);
+  overflow:hidden;
+}
+.congestion-fill {
+  height:100%; border-radius:2px;
+  transition:width 1s ease;
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:10px; margin-top:16px;
+}
+
+.stat-card {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:12px; padding:14px;
+  text-align:center;
+}
+
+.stat-icon { font-size:22px; margin-bottom:6px; }
+.stat-val {
+  font-family:'Orbitron'; font-size:20px; font-weight:700;
+}
+.stat-label {
+  font-family:'Share Tech Mono'; font-size:9px;
+  color:var(--text-muted); letter-spacing:1px; margin-top:2px;
+}
+
+/* ── EV COMPARISON ── */
+.ev-card {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:14px; margin-top:10px;
+  overflow:hidden;
+}
+
+.ev-header {
+  padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(0,229,255,0.04);
+  border-bottom:1px solid var(--border);
+}
+
+.ev-title {
+  font-family:'Orbitron'; font-size:10px; font-weight:700;
+  letter-spacing:1.5px; color:var(--cyan);
+}
+
+.ev-toggle {
+  display:flex; align-items:center; gap:8px;
+}
+
+.toggle-switch {
+  width:40px; height:22px;
+  background:var(--bg-void);
+  border:1px solid var(--border-bright);
+  border-radius:11px; position:relative; cursor:pointer;
+  transition:background .2s;
+}
+
+.toggle-switch.on { background:rgba(0,229,255,0.3); }
+
+.toggle-knob {
+  position:absolute; top:3px; left:3px;
+  width:14px; height:14px;
+  background:var(--text-muted);
+  border-radius:50%;
+  transition:all .2s;
+}
+
+.toggle-switch.on .toggle-knob {
+  left:21px; background:var(--cyan);
+  box-shadow:0 0 8px var(--cyan);
+}
+
+.toggle-label {
+  font-family:'Share Tech Mono'; font-size:10px;
+  color:var(--text-sub);
+}
+
+.ev-content { padding:14px 16px; }
+
+.ev-bars { display:flex; flex-direction:column; gap:10px; }
+
+.ev-bar-row {
+  display:flex; align-items:center; gap:10px;
+}
+
+.ev-bar-label {
+  font-family:'Exo 2'; font-size:11px; font-weight:600;
+  color:var(--text-sub); width:60px; flex-shrink:0;
+}
+
+.ev-bar-track {
+  flex:1; height:8px; background:rgba(255,255,255,0.06);
+  border-radius:4px; overflow:hidden;
+}
+
+.ev-bar-fill {
+  height:100%; border-radius:4px;
+  transition: width 1s ease;
+}
+
+.ev-bar-val {
+  font-family:'Share Tech Mono'; font-size:11px;
+  color:var(--text-sub); width:50px; text-align:right;
+}
+
+/* ── CONGESTION MAP MINI ── */
+.congestion-card {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:14px; margin-top:10px;
+  overflow:hidden;
+}
+
+.congestion-header {
+  padding:12px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(255,140,0,0.04);
+  border-bottom:1px solid var(--border);
+}
+
+.congestion-title {
+  font-family:'Orbitron'; font-size:10px; font-weight:700;
+  letter-spacing:1.5px; color:var(--amber);
+}
+
+.hotspots { padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
+
+.hotspot-row {
+  display:flex; align-items:center; gap:10px;
+}
+
+.hotspot-name {
+  flex:1; font-size:12px; font-weight:600; color:var(--text-prime);
+}
+
+.hotspot-bar-track {
+  width:100px; height:6px;
+  background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden;
+}
+
+.hotspot-bar-fill {
+  height:100%; border-radius:3px;
+  transition:width 1s ease;
+}
+
+.hotspot-level {
+  font-family:'Share Tech Mono'; font-size:10px;
+  width:36px; text-align:right;
+}
+
+/* ── AI INSIGHTS ── */
+.insights-card {
+  background:var(--bg-card);
+  border:1px solid rgba(157,78,221,0.25);
+  border-radius:14px; margin-top:10px;
+  overflow:hidden;
+}
+
+.insights-header {
+  padding:12px 16px;
+  display:flex; align-items:center; gap:8px;
+  background:rgba(157,78,221,0.05);
+  border-bottom:1px solid rgba(157,78,221,0.15);
+}
+
+.insights-title {
+  font-family:'Orbitron'; font-size:10px; font-weight:700;
+  letter-spacing:1.5px; color:var(--purple);
+}
+
+.insights-list { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+
+.insight-item {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:10px 12px;
+  background:rgba(157,78,221,0.06);
+  border:1px solid rgba(157,78,221,0.12);
+  border-radius:10px;
+}
+
+.insight-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+.insight-text { font-size:12px; font-weight:500; color:var(--text-sub); line-height:1.5; }
+.insight-text strong { color:var(--text-prime); }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:480px;
+  background: rgba(5,10,20,0.95);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  padding:10px 20px 16px;
+  display:flex; justify-content:space-around;
+  z-index:100;
+}
+
+.nav-item {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  cursor:pointer; padding:4px 12px;
+  border-radius:8px; transition:all .2s;
+}
+
+.nav-item.active {
+  background:var(--cyan-glow);
+}
+
+.nav-icon { font-size:20px; }
+.nav-label {
+  font-family:'Exo 2'; font-size:9px; font-weight:600;
+  color:var(--text-muted); letter-spacing:.5px;
+}
+.nav-item.active .nav-label { color:var(--cyan); }
+
+/* ── TOKEN SAVINGS WIDGET ── */
+.token-widget {
+  position:fixed; bottom:80px; right:16px;
+  background:var(--bg-card);
+  border:1px solid rgba(0,255,135,0.2);
+  border-radius:10px; padding:8px 12px;
+  z-index:200;
+  font-family:'Share Tech Mono'; font-size:10px;
+  display:none;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+
+.token-widget.visible { display:block; }
+.token-widget-label { color:var(--text-muted); margin-bottom:2px; }
+.token-widget-val { color:var(--green); font-size:12px; }
+
+/* ── ERROR STATE ── */
+.error-banner {
+  margin:10px 20px 0;
+  background:rgba(255,61,90,0.1);
+  border:1px solid rgba(255,61,90,0.25);
+  border-radius:12px; padding:12px 16px;
+  font-size:12px; color:#FF6B7A;
+  display:none; align-items:center; gap:8px;
+}
+.error-banner.visible { display:flex; }
+
+/* ── ANIMATIONS ── */
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+.animate-in { animation: slideUp .4s ease forwards; }
+
+.stagger-1 { animation-delay:.05s; opacity:0; }
+.stagger-2 { animation-delay:.1s; opacity:0; }
+.stagger-3 { animation-delay:.15s; opacity:0; }
+.stagger-4 { animation-delay:.2s; opacity:0; }
+
+/* ── SHIMMER for loading ── */
+@keyframes shimmer {
+  0% { background-position:-200% center; }
+  100% { background-position:200% center; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--bg-card) 25%, rgba(0,229,255,0.08) 50%, var(--bg-card) 75%);
+  background-size:200% auto;
+  animation: shimmer 1.5s linear infinite;
+}
+
+/* ── INSTALL BANNER ── */
+.install-banner {
+  margin:10px 20px 0;
+  background:linear-gradient(135deg, rgba(0,229,255,0.08), rgba(157,78,221,0.08));
+  border:1px solid rgba(0,229,255,0.2);
+  border-radius:12px; padding:12px 16px;
+  display:none; align-items:center; gap:10px;
+}
+.install-banner.visible { display:flex; }
+.install-text { flex:1; font-size:12px; color:var(--text-sub); }
+.install-text strong { color:var(--cyan); }
+.btn-install {
+  background:var(--cyan); border:none; border-radius:8px;
+  padding:7px 14px; color:#050A14;
+  font-family:'Orbitron'; font-size:9px; font-weight:700;
+  cursor:pointer; letter-spacing:1px; flex-shrink:0;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width:360px) {
+  .impact-main { font-size:18px; }
+  .metric-val { font-size:14px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">🚦</div>
+      <div>
+        <div class="logo-text">MOBILITYAI</div>
+        <div class="logo-sub">TRAFFIC INTELLIGENCE v2.6</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div><span class="live-dot"></span><span class="live-label">LIVE</span></div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </div>
+
+  <!-- INSTALL BANNER -->
+  <div class="install-banner" id="installBanner">
+    <span>📲</span>
+    <div class="install-text"><strong>Add to Home Screen</strong><br>for offline access</div>
+    <button class="btn-install" id="installBtn">INSTALL</button>
+  </div>
+
+  <!-- API KEY -->
+  <div class="api-section animate-in stagger-1">
+    <div class="api-label">🔑 ANTHROPIC API KEY</div>
+    <div class="api-row">
+      <input type="password" class="api-input" id="apiKey" placeholder="sk-ant-..." value="">
+      <button class="btn-save" onclick="saveKey()">SAVE</button>
+    </div>
+  </div>
+
+  <!-- CITY SELECTOR -->
+  <div class="section-header" style="margin-top:20px;">
+    <span class="section-tag">CITY</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="city-strip" id="cityStrip">
+    <button class="city-btn active" onclick="selectCity(this,'Hyderabad')">🏙 Hyderabad</button>
+    <button class="city-btn" onclick="selectCity(this,'Mumbai')">🌊 Mumbai</button>
+    <button class="city-btn" onclick="selectCity(this,'Bangalore')">🌿 Bangalore</button>
+    <button class="city-btn" onclick="selectCity(this,'Delhi')">🏛 Delhi</button>
+    <button class="city-btn" onclick="selectCity(this,'Chennai')">🌴 Chennai</button>
+    <button class="city-btn" onclick="selectCity(this,'Pune')">🎓 Pune</button>
+  </div>
+
+  <!-- ROUTE PLANNER -->
+  <div class="route-card animate-in stagger-2" style="margin-top:20px;">
+    <div class="route-card-header">
+      <span class="route-card-title">ROUTE PLANNER</span>
+      <div class="mode-tags">
+        <span class="mode-tag active" title="Metro" onclick="toggleMode(this,'metro')">🚇</span>
+        <span class="mode-tag active" title="Bus" onclick="toggleMode(this,'bus')">🚌</span>
+        <span class="mode-tag active" title="Auto" onclick="toggleMode(this,'auto')">🛺</span>
+        <span class="mode-tag active" title="Cab" onclick="toggleMode(this,'cab')">🚖</span>
+        <span class="mode-tag" title="EV" onclick="toggleMode(this,'ev')">⚡</span>
+        <span class="mode-tag" title="Bike" onclick="toggleMode(this,'bike')">🏍</span>
+      </div>
+    </div>
+    <div class="route-inputs">
+      <div class="input-group">
+        <span class="input-icon">📍</span>
+        <input type="text" class="route-input" id="origin" placeholder="From — Current location or area" value="Hitech City, Hyderabad">
+      </div>
+      <div class="connector">
+        <div class="connector-line"></div>
+        <span class="connector-dots">• • •</span>
+      </div>
+      <div class="input-group">
+        <span class="input-icon">🎯</span>
+        <input type="text" class="route-input" id="destination" placeholder="To — Destination" value="Charminar, Hyderabad">
+      </div>
+
+      <div class="prefs-row" id="prefsRow">
+        <span class="pref-chip active" onclick="togglePref(this)" data-pref="fastest">⚡ Fastest</span>
+        <span class="pref-chip active" onclick="togglePref(this)" data-pref="cheapest">💰 Cheapest</span>
+        <span class="pref-chip" onclick="togglePref(this)" data-pref="comfortable">🛋 Comfortable</span>
+        <span class="pref-chip" onclick="togglePref(this)" data-pref="eco">🌿 Eco-friendly</span>
+        <span class="pref-chip" onclick="togglePref(this)" data-pref="avoid_highway">🚫 No Highway</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYZE BUTTON -->
+  <button class="btn-analyze animate-in stagger-3" id="analyzeBtn" onclick="analyzeRoute()">
+    ⚡ ANALYZE WITH AI
+  </button>
+
+  <!-- ERROR BANNER -->
+  <div class="error-banner" id="errorBanner">
+    <span>⚠️</span>
+    <span id="errorText">Enter API key and try again.</span>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-card" id="loadingCard">
+    <div style="font-family:'Orbitron';font-size:10px;letter-spacing:2px;color:var(--cyan);margin-bottom:16px;">
+      AI PROCESSING ROUTE...
+    </div>
+    <div class="loading-stages" id="loadingStages">
+      <div class="stage-row" id="stage0">
+        <span class="stage-icon">🗺</span>
+        <span class="stage-text">Mapping route topology</span>
+        <span class="stage-status">WAIT</span>
+      </div>
+      <div class="stage-row" id="stage1">
+        <span class="stage-icon">🚦</span>
+        <span class="stage-text">Predicting congestion zones</span>
+        <span class="stage-status">WAIT</span>
+      </div>
+      <div class="stage-row" id="stage2">
+        <span class="stage-icon">🔀</span>
+        <span class="stage-text">Optimizing multi-modal paths</span>
+        <span class="stage-status">WAIT</span>
+      </div>
+      <div class="stage-row" id="stage3">
+        <span class="stage-icon">💸</span>
+        <span class="stage-text">Computing cost differentials</span>
+        <span class="stage-status">WAIT</span>
+      </div>
+      <div class="stage-row" id="stage4">
+        <span class="stage-icon">⚡</span>
+        <span class="stage-text">Simulating EV fuel savings</span>
+        <span class="stage-status">WAIT</span>
+      </div>
+      <div class="stage-row" id="stage5">
+        <span class="stage-icon">🧠</span>
+        <span class="stage-text">Generating AI insights</span>
+        <span class="stage-status">WAIT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPACT BANNER -->
+  <div class="impact-banner" id="impactBanner">
+    <div class="impact-label">✦ AI INTELLIGENCE RESULT</div>
+    <div class="impact-main" id="impactMain">AI saved 28 min & ₹140 today.</div>
+    <div class="impact-sub" id="impactSub">vs. standard cab ride without AI optimization</div>
+    <div class="impact-chips" id="impactChips"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results-section" id="resultsSection">
+    <div class="section-header" style="padding:16px 0 10px;">
+      <span class="section-tag">OPTIMAL ROUTES</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="route-options" id="routeOptions"></div>
+
+    <!-- STATS -->
+    <div class="stats-row animate-in stagger-2" id="statsRow"></div>
+
+    <!-- EV COMPARISON -->
+    <div class="ev-card animate-in stagger-3">
+      <div class="ev-header">
+        <span class="ev-title">⚡ EV SAVINGS SIMULATOR</span>
+        <div class="ev-toggle">
+          <span class="toggle-label" id="evToggleLabel">ICE</span>
+          <div class="toggle-switch" id="evToggle" onclick="toggleEV()"></div>
+          <span class="toggle-label" style="color:var(--cyan)">EV</span>
+        </div>
+      </div>
+      <div class="ev-content">
+        <div class="ev-bars" id="evBars"></div>
+      </div>
+    </div>
+
+    <!-- CONGESTION MAP -->
+    <div class="congestion-card animate-in stagger-3">
+      <div class="congestion-header">
+        <span class="congestion-title">🔥 CONGESTION HOTSPOTS</span>
+        <span style="font-family:'Share Tech Mono';font-size:9px;color:var(--text-muted)">LIVE</span>
+      </div>
+      <div class="hotspots" id="hotspots"></div>
+    </div>
+
+    <!-- AI INSIGHTS -->
+    <div class="insights-card animate-in stagger-4">
+      <div class="insights-header">
+        <span style="font-size:16px;">🧠</span>
+        <span class="insights-title">AI SMART INSIGHTS</span>
+      </div>
+      <div class="insights-list" id="insightsList"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="nav-item active" onclick="navTo(this)">
+    <span class="nav-icon">🗺</span>
+    <span class="nav-label">ROUTES</span>
+  </div>
+  <div class="nav-item" onclick="navTo(this)">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">ANALYTICS</span>
+  </div>
+  <div class="nav-item" onclick="navTo(this)">
+    <span class="nav-icon">⚡</span>
+    <span class="nav-label">EV MODE</span>
+  </div>
+  <div class="nav-item" onclick="navTo(this)">
+    <span class="nav-icon">⏱</span>
+    <span class="nav-label">HISTORY</span>
+  </div>
+</nav>
+
+<!-- FOOTER -->
+<div style="text-align:center;padding:16px 20px 90px;border-top:1px solid rgba(0,229,255,0.08);margin-top:24px;">
+  <div style="font-family:'Share Tech Mono';font-size:9px;color:var(--text-muted);letter-spacing:1.5px;margin-bottom:6px;">DESIGNED &amp; ARCHITECTED BY</div>
+  <div style="font-family:'Orbitron';font-size:13px;font-weight:700;color:var(--cyan);letter-spacing:1px;text-shadow:0 0 12px rgba(0,229,255,0.4);">Krishnamurthy Kandregula</div>
+  <div style="font-family:'Share Tech Mono';font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:6px;">MADE WITH <span style="color:#FF3D5A;">♥</span> BY <span style="color:var(--purple);">CLAUDE</span></div>
+</div>
+
+<!-- TOKEN WIDGET -->
+<div class="token-widget" id="tokenWidget">
+  <div class="token-widget-label">TOKENS USED</div>
+  <div class="token-widget-val" id="tokenVal">—</div>
+</div>
+
+<script>
+// ── PWA SETUP ──
+const CACHE = 'mobility-ai-v1';
+
+const swCode = `
+const CACHE='mobility-ai-v1';
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE)));
+self.addEventListener('fetch',e=>{
+  if(e.request.url.includes('api.anthropic.com'))return;
+  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+    const clone=res.clone();
+    caches.open(CACHE).then(c=>c.put(e.request,clone));
+    return res;
+  })));
+});`;
+
+const swBlob = new Blob([swCode],{type:'application/javascript'});
+const swURL = URL.createObjectURL(swBlob);
+navigator.serviceWorker?.register(swURL).catch(()=>{});
+
+// Manifest
+const icons = generateIcons();
+const manifest = {
+  name:'MobilityAI — Traffic Intelligence',
+  short_name:'MobilityAI',
+  start_url:'.',
+  display:'standalone',
+  background_color:'#050A14',
+  theme_color:'#050A14',
+  icons
+};
+const mb = new Blob([JSON.stringify(manifest)],{type:'application/json'});
+document.getElementById('manifest-link').href = URL.createObjectURL(mb);
+
+function generateIcons() {
+  const sizes=[192,512];
+  return sizes.map(s=>{
+    const c=document.createElement('canvas');
+    c.width=c.height=s;
+    const ctx=c.getContext('2d');
+    const g=ctx.createLinearGradient(0,0,s,s);
+    g.addColorStop(0,'#00E5FF'); g.addColorStop(.5,'#9D4EDD'); g.addColorStop(1,'#FF8C00');
+    ctx.fillStyle=g; ctx.roundRect(0,0,s,s,s*.2); ctx.fill();
+    ctx.fillStyle='#050A14';
+    ctx.font=`bold ${s*.4}px serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🚦',s/2,s/2);
+    return {src:c.toDataURL(),sizes:`${s}x${s}`,type:'image/png'};
+  });
+}
+
+// ── STATE ──
+let city = 'Hyderabad';
+let evMode = false;
+let lastResult = null;
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  document.getElementById('installBanner').classList.add('visible');
+});
+
+document.getElementById('installBtn').onclick = async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  const res = await deferredPrompt.userChoice;
+  if(res.outcome==='accepted') document.getElementById('installBanner').classList.remove('visible');
+  deferredPrompt=null;
+};
+
+// ── CLOCK ──
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('en-IN',{hour12:false});
+}
+updateClock(); setInterval(updateClock,1000);
+
+// ── KEY MANAGEMENT ──
+(function(){
+  const k=localStorage.getItem('mobility_api_key');
+  if(k) document.getElementById('apiKey').value=k;
+})();
+
+function saveKey(){
+  const k=document.getElementById('apiKey').value.trim();
+  if(k){ localStorage.setItem('mobility_api_key',k); showToast('API key saved ✓'); }
+}
+
+function showToast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#0C1628;border:1px solid rgba(0,229,255,.3);color:#00E5FF;font-family:Share Tech Mono;font-size:12px;padding:8px 16px;border-radius:8px;z-index:999;pointer-events:none;';
+  t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2000);
+}
+
+// ── CITY / MODE / PREFS ──
+function selectCity(el,c){
+  city=c;
+  document.querySelectorAll('.city-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const city_areas={
+    'Hyderabad':['Hitech City, Hyderabad','Charminar, Hyderabad'],
+    'Mumbai':['Bandra, Mumbai','Colaba, Mumbai'],
+    'Bangalore':['Whitefield, Bangalore','MG Road, Bangalore'],
+    'Delhi':['Connaught Place, Delhi','Dwarka, Delhi'],
+    'Chennai':['Anna Nagar, Chennai','T Nagar, Chennai'],
+    'Pune':['Hinjewadi, Pune','Shivajinagar, Pune']
+  };
+  if(city_areas[c]){
+    document.getElementById('origin').value=city_areas[c][0];
+    document.getElementById('destination').value=city_areas[c][1];
+  }
+}
+
+function toggleMode(el){
+  el.classList.toggle('active');
+}
+
+function togglePref(el){
+  el.classList.toggle('active');
+}
+
+function navTo(el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── EV TOGGLE ──
+function toggleEV(){
+  evMode=!evMode;
+  const t=document.getElementById('evToggle');
+  const l=document.getElementById('evToggleLabel');
+  t.classList.toggle('on',evMode);
+  l.textContent=evMode?'EV':'ICE';
+  if(lastResult) renderEVBars(lastResult, evMode);
+}
+
+// ── LOADING STAGES ──
+async function animateStages(){
+  const stages=document.querySelectorAll('.stage-row');
+  for(let i=0;i<stages.length;i++){
+    stages[i].classList.add('active');
+    stages[i].querySelector('.stage-status').textContent='PROC...';
+    await sleep(400);
+    stages[i].classList.remove('active');
+    stages[i].classList.add('done');
+    stages[i].querySelector('.stage-status').textContent='✓ DONE';
+  }
+}
+
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ── MAIN ANALYZE ──
+async function analyzeRoute(){
+  const apiKey = localStorage.getItem('mobility_api_key') || document.getElementById('apiKey').value.trim();
+  const origin = document.getElementById('origin').value.trim();
+  const dest = document.getElementById('destination').value.trim();
+
+  if(!apiKey){ showError('Please save your Anthropic API key first.'); return; }
+  if(!origin||!dest){ showError('Enter both origin and destination.'); return; }
+
+  hideError();
+  clearResults();
+
+  const prefs = [...document.querySelectorAll('.pref-chip.active')].map(c=>c.dataset.pref);
+  const modes = [...document.querySelectorAll('.mode-tag.active')].map(m=>m.title.toLowerCase());
+
+  document.getElementById('analyzeBtn').disabled=true;
+  document.getElementById('analyzeBtn').textContent='⏳ ANALYZING...';
+  document.getElementById('loadingCard').classList.add('visible');
+
+  const stagePromise = animateStages();
+
+  const prompt = `You are an AI Mobility & Traffic Intelligence system for Indian cities.
+Analyze this journey and return ONLY valid JSON (no markdown, no backticks, no explanation):
+
+Journey: ${origin} → ${dest}
+City: ${city}
+Preferred modes: ${modes.join(', ')}
+User preferences: ${prefs.join(', ')}
+Current time: ${new Date().toLocaleTimeString('en-IN')}
+
+Return this exact JSON structure:
+{
+  "impact": {
+    "time_saved_min": <number>,
+    "money_saved_inr": <number>,
+    "vs_what": "<what baseline>",
+    "co2_saved_kg": <number>
+  },
+  "routes": [
+    {
+      "type": "best",
+      "badge": "AI OPTIMAL",
+      "duration_min": <number>,
+      "cost_inr": <number>,
+      "distance_km": <number>,
+      "legs": [
+        {"icon": "<emoji>", "mode": "<name>", "duration_min": <number>, "cost_inr": <number>}
+      ],
+      "congestion_pct": <0-100>,
+      "congestion_color": "<hex color>",
+      "delay_min": <number>
+    },
+    {
+      "type": "fast",
+      "badge": "FASTEST",
+      "duration_min": <number>,
+      "cost_inr": <number>,
+      "distance_km": <number>,
+      "legs": [...],
+      "congestion_pct": <0-100>,
+      "congestion_color": "<hex color>",
+      "delay_min": <number>
+    },
+    {
+      "type": "cheap",
+      "badge": "CHEAPEST",
+      "duration_min": <number>,
+      "cost_inr": <number>,
+      "distance_km": <number>,
+      "legs": [...],
+      "congestion_pct": <0-100>,
+      "congestion_color": "<hex color>",
+      "delay_min": <number>
+    }
+  ],
+  "stats": {
+    "ai_accuracy_pct": <85-98>,
+    "routes_analyzed": <number 8-24>,
+    "live_vehicles": <number 1200-9800>,
+    "avg_speed_kmh": <number>
+  },
+  "ev_comparison": {
+    "ice_cost_inr": <number>,
+    "ev_cost_inr": <number>,
+    "ice_co2_kg": <number>,
+    "ev_co2_kg": <number>,
+    "ice_time_min": <number>,
+    "ev_time_min": <number>
+  },
+  "congestion_hotspots": [
+    {"name": "<area>", "level_pct": <0-100>, "color": "<hex>"},
+    {"name": "<area>", "level_pct": <0-100>, "color": "<hex>"},
+    {"name": "<area>", "level_pct": <0-100>, "color": "<hex>"},
+    {"name": "<area>", "level_pct": <0-100>, "color": "<hex>"}
+  ],
+  "insights": [
+    {"icon": "<emoji>", "text": "<insight about this specific route, bold key stats>"},
+    {"icon": "<emoji>", "text": "<insight>"},
+    {"icon": "<emoji>", "text": "<insight>"},
+    {"icon": "<emoji>", "text": "<insight>"}
+  ]
+}
+
+Make all numbers realistic for ${city} traffic. Congestion colors: green=#00FF87 low, amber=#FF8C00 medium, red=#FF3D5A high.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1200,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+
+    if(!resp.ok){
+      const err=await resp.json().catch(()=>({}));
+      throw new Error(err.error?.message||`API error ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    await stagePromise;
+
+    const raw = data.content.map(c=>c.text||'').join('');
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(clean);
+    lastResult = result;
+
+    // Token tracking
+    if(data.usage){
+      const total = (data.usage.input_tokens||0)+(data.usage.output_tokens||0);
+      document.getElementById('tokenVal').textContent=total+' tokens';
+      document.getElementById('tokenWidget').classList.add('visible');
+    }
+
+    renderResults(result);
+
+  } catch(err){
+    await stagePromise;
+    showError(err.message||'Analysis failed. Check API key.');
+  }
+
+  document.getElementById('loadingCard').classList.remove('visible');
+  document.getElementById('analyzeBtn').disabled=false;
+  document.getElementById('analyzeBtn').textContent='⚡ ANALYZE WITH AI';
+}
+
+// ── RENDER ──
+function renderResults(r){
+  // Impact banner
+  const ib = document.getElementById('impactBanner');
+  document.getElementById('impactMain').textContent =
+    `AI saved ${r.impact.time_saved_min} min & ₹${r.impact.money_saved_inr} today.`;
+  document.getElementById('impactSub').textContent =
+    `vs. ${r.impact.vs_what}`;
+  const chips = document.getElementById('impactChips');
+  chips.innerHTML = `
+    <span class="impact-chip">⏱ ${r.impact.time_saved_min} min saved</span>
+    <span class="impact-chip">💰 ₹${r.impact.money_saved_inr} saved</span>
+    <span class="impact-chip">🌿 ${r.impact.co2_saved_kg}kg CO₂ less</span>
+  `;
+  ib.classList.add('visible');
+
+  // Route options
+  const ro = document.getElementById('routeOptions');
+  ro.innerHTML = '';
+  const badgeMap = {best:'badge-best', fast:'badge-fast', cheap:'badge-cheap'};
+  r.routes.forEach((route,i)=>{
+    const div = document.createElement('div');
+    div.className = `route-option ${route.type} animate-in`;
+    div.style.animationDelay = `${i*0.08}s`; div.style.opacity='0';
+    const legsHTML = route.legs.map((l,j)=>`
+      ${j>0?'<span class="leg-arrow">›</span>':''}
+      <span class="leg"><span class="leg-icon">${l.icon}</span> ${l.mode} <span style="color:var(--text-muted);margin-left:3px">${l.duration_min}m</span></span>
+    `).join('');
+    const congColor = route.congestion_pct > 65 ? '#FF3D5A' : route.congestion_pct > 35 ? '#FF8C00' : '#00FF87';
+    div.innerHTML = `
+      <div class="route-option-top">
+        <span class="route-badge ${badgeMap[route.type]}">${route.badge}</span>
+        <div class="route-metrics">
+          <div class="metric">
+            <div class="metric-val">${route.duration_min}<span style="font-size:11px;color:var(--text-muted)"> m</span></div>
+            <div class="metric-label">DURATION</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val">₹${route.cost_inr}</div>
+            <div class="metric-label">COST</div>
+          </div>
+          <div class="metric">
+            <div class="metric-val" style="font-size:13px;color:${route.delay_min>0?'#FF8C00':'#00FF87'}">${route.delay_min>0?'+'+route.delay_min+'m':'On time'}</div>
+            <div class="metric-label">DELAY</div>
+          </div>
+        </div>
+      </div>
+      <div class="route-legs">${legsHTML}</div>
+      <div class="congestion-bar" title="Congestion ${route.congestion_pct}%">
+        <div class="congestion-fill" style="width:0%;background:${congColor};" data-target="${route.congestion_pct}%"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-family:'Share Tech Mono';font-size:9px;color:var(--text-muted)">CONGESTION</span>
+        <span style="font-family:'Share Tech Mono';font-size:9px;color:${congColor}">${route.congestion_pct}%</span>
+      </div>
+    `;
+    ro.appendChild(div);
+  });
+
+  // Stats
+  const sr = document.getElementById('statsRow');
+  sr.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-val" style="color:var(--green)">${r.stats.ai_accuracy_pct}%</div>
+      <div class="stat-label">AI ACCURACY</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🔍</div>
+      <div class="stat-val" style="color:var(--cyan)">${r.stats.routes_analyzed}</div>
+      <div class="stat-label">ROUTES ANALYZED</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🚗</div>
+      <div class="stat-val" style="color:var(--amber)">${r.stats.live_vehicles.toLocaleString('en-IN')}</div>
+      <div class="stat-label">LIVE VEHICLES</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">💨</div>
+      <div class="stat-val" style="color:var(--purple)">${r.stats.avg_speed_kmh}</div>
+      <div class="stat-label">AVG KM/H</div>
+    </div>
+  `;
+
+  // EV bars
+  renderEVBars(r, evMode);
+
+  // Hotspots
+  const hs = document.getElementById('hotspots');
+  hs.innerHTML = r.congestion_hotspots.map(h=>`
+    <div class="hotspot-row">
+      <span class="hotspot-name">${h.name}</span>
+      <div class="hotspot-bar-track">
+        <div class="hotspot-bar-fill" style="width:0%;background:${h.color};" data-target="${h.level_pct}%"></div>
+      </div>
+      <span class="hotspot-level" style="color:${h.color}">${h.level_pct}%</span>
+    </div>
+  `).join('');
+
+  // Insights
+  const il = document.getElementById('insightsList');
+  il.innerHTML = r.insights.map(ins=>`
+    <div class="insight-item animate-in">
+      <span class="insight-icon">${ins.icon}</span>
+      <span class="insight-text">${ins.text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('resultsSection').classList.add('visible');
+
+  // Animate bars after DOM render
+  requestAnimationFrame(()=>{
+    setTimeout(()=>{
+      document.querySelectorAll('[data-target]').forEach(el=>{
+        el.style.width=el.dataset.target;
+      });
+    },100);
+  });
+
+  // Scroll to impact
+  setTimeout(()=>{
+    document.getElementById('impactBanner').scrollIntoView({behavior:'smooth',block:'nearest'});
+  },200);
+}
+
+function renderEVBars(r, isEV){
+  const ev = r.ev_comparison;
+  const bars = document.getElementById('evBars');
+  const maxCost = Math.max(ev.ice_cost_inr, ev.ev_cost_inr);
+  const maxCO2 = Math.max(ev.ice_co2_kg, ev.ev_co2_kg);
+  const maxTime = Math.max(ev.ice_time_min, ev.ev_time_min);
+
+  bars.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="text-align:center;padding:10px;background:rgba(255,140,0,${isEV?'.04':'.12'});border:1px solid rgba(255,140,0,${isEV?'.1':'.3'});border-radius:10px;">
+        <div style="font-size:18px">🛢</div>
+        <div style="font-family:'Orbitron';font-size:16px;font-weight:700;color:${isEV?'var(--text-muted)':'var(--amber)'}">₹${ev.ice_cost_inr}</div>
+        <div style="font-family:'Share Tech Mono';font-size:9px;color:var(--text-muted)">PETROL/DIESEL</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:rgba(0,229,255,${isEV?'.12':'.04'});border:1px solid rgba(0,229,255,${isEV?'.3':'.1'});border-radius:10px;">
+        <div style="font-size:18px">⚡</div>
+        <div style="font-family:'Orbitron';font-size:16px;font-weight:700;color:${isEV?'var(--cyan)':'var(--text-muted)'}">₹${ev.ev_cost_inr}</div>
+        <div style="font-family:'Share Tech Mono';font-size:9px;color:var(--text-muted)">ELECTRIC</div>
+      </div>
+    </div>
+    <div class="ev-bar-row">
+      <span class="ev-bar-label">💰 Cost</span>
+      <div class="ev-bar-track">
+        <div class="ev-bar-fill" style="width:${(isEV?ev.ev_cost_inr:ev.ice_cost_inr)/maxCost*100}%;background:${isEV?'#00E5FF':'#FF8C00'}"></div>
+      </div>
+      <span class="ev-bar-val">₹${isEV?ev.ev_cost_inr:ev.ice_cost_inr}</span>
+    </div>
+    <div class="ev-bar-row">
+      <span class="ev-bar-label">🌿 CO₂</span>
+      <div class="ev-bar-track">
+        <div class="ev-bar-fill" style="width:${(isEV?ev.ev_co2_kg:ev.ice_co2_kg)/maxCO2*100}%;background:${isEV?'#00FF87':'#FF3D5A'}"></div>
+      </div>
+      <span class="ev-bar-val">${isEV?ev.ev_co2_kg:ev.ice_co2_kg}kg</span>
+    </div>
+    <div class="ev-bar-row">
+      <span class="ev-bar-label">⏱ Time</span>
+      <div class="ev-bar-track">
+        <div class="ev-bar-fill" style="width:${(isEV?ev.ev_time_min:ev.ice_time_min)/maxTime*100}%;background:#9D4EDD"></div>
+      </div>
+      <span class="ev-bar-val">${isEV?ev.ev_time_min:ev.ice_time_min}m</span>
+    </div>
+    <div style="margin-top:12px;padding:10px;background:rgba(0,255,135,0.06);border:1px solid rgba(0,255,135,0.15);border-radius:8px;text-align:center;">
+      <span style="font-family:'Orbitron';font-size:11px;font-weight:700;color:var(--green)">
+        ${isEV
+          ? `⚡ EV saves ₹${ev.ice_cost_inr-ev.ev_cost_inr} & ${(ev.ice_co2_kg-ev.ev_co2_kg).toFixed(2)}kg CO₂`
+          : `Switch to EV → Save ₹${ev.ice_cost_inr-ev.ev_cost_inr} per trip`}
+      </span>
+    </div>
+  `;
+}
+
+function clearResults(){
+  document.getElementById('impactBanner').classList.remove('visible');
+  document.getElementById('resultsSection').classList.remove('visible');
+  // Reset stages
+  document.querySelectorAll('.stage-row').forEach(s=>{
+    s.classList.remove('active','done');
+    s.querySelector('.stage-status').textContent='WAIT';
+  });
+}
+
+function showError(msg){
+  document.getElementById('errorText').textContent=msg;
+  document.getElementById('errorBanner').classList.add('visible');
+}
+
+function hideError(){
+  document.getElementById('errorBanner').classList.remove('visible');
+}
+</script>
+</body>
+</html>
